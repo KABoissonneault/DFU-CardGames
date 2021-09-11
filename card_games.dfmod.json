@@ -1,0 +1,16 @@
+{
+    "ModTitle": "Card Games",
+    "ModVersion": "0.1",
+    "ModAuthor": "kaboissonneault",
+    "ContactInfo": "kaboissonneault@gmail.com",
+    "DFUnity_Version": "0.12.3",
+    "ModDescription": "Card games",
+    "GUID": "a155f8b8-317d-448e-b2eb-06e22d2e7daf",
+    "Files": [
+        "Assets/Game/Mods/CardGames/card_games.dfmod.json",
+        "Assets/Game/Mods/CardGames/Textures/8BitDeckAssets.png",
+        "Assets/Game/Mods/CardGames/Scripts/CardGameWindow.cs",
+        "Assets/Game/Mods/CardGames/Scripts/CardGamesMod.cs",
+        "Assets/Game/Mods/CardGames/Scripts/CardGame.cs"
+    ]
+}
