@@ -3,8 +3,6 @@ using UnityEngine;
 using DaggerfallWorkshop.Game.UserInterface;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
 using System;
-using DaggerfallWorkshop.Utility;
-using DaggerfallWorkshop.Game;
 
 namespace CardGamesMod
 {
@@ -12,11 +10,10 @@ namespace CardGamesMod
     {
         const int cardPixelWidth = 35;
         const int cardPixelHeight = 47;
+        const float cardTextureU = 0.0655430712f;
+        const float cardTextureV = 0.25f;
 
         CardGame game;
-
-        Panel drawPanel;
-        Panel discardPanel;
 
         Texture2D baseCardTexture;
 
@@ -31,57 +28,6 @@ namespace CardGamesMod
             NativePanel.BackgroundColor = new Color(0.2f, 0.4f, 0.3f);
 
             baseCardTexture = CardGamesMod.Mod.GetAsset<Texture2D>("8BitDeckAssets");
-
-            const int cardDistance = 70;
-
-            {
-                int positionX = (int)NativePanel.Size.x / 2 - cardDistance / 2 - cardPixelWidth / 2;
-                int positionY = (int)NativePanel.Size.y / 2 - cardPixelHeight / 2;
-
-                drawPanel = DaggerfallUI.AddPanel(
-                    new Rect
-                    {
-                        position = new Vector2(positionX, positionY),
-                        size = new Vector2(cardPixelWidth, cardPixelHeight)
-                    },
-                    NativePanel
-                    );
-
-                drawPanel.BackgroundTexture = ImageReader.GetSubTexture(baseCardTexture, new Rect { position = new Vector2 { x = 0, y = 0 }, size = new Vector2 { x = cardPixelWidth, y = cardPixelHeight } });
-
-                if(game.Draw.GetCardCount() == 0)
-                {
-                    drawPanel.Enabled = false;
-                }
-
-                game.Draw.OnCardAdded += OnCardDraw;
-                game.Draw.OnCardRemoved += OnCardDraw;
-            }
-
-            {
-                int positionX = (int)NativePanel.Size.x / 2 + cardDistance / 2 - cardPixelWidth / 2;
-                int positionY = (int)NativePanel.Size.y / 2 - cardPixelHeight / 2;
-
-                discardPanel = DaggerfallUI.AddPanel(
-                    new Rect
-                    {
-                        position = new Vector2(positionX, positionY),
-                        size = new Vector2(cardPixelWidth, cardPixelHeight)
-                    },
-                    NativePanel
-                    );
-
-                if (game.Discard.GetCardCount() > 0)
-                {
-                    UpdateCardTexture(discardPanel, game.Discard.GetTopCard());
-                }
-                else
-                {
-                    discardPanel.Enabled = false;
-                }
-                game.Discard.OnCardAdded += OnCardDraw;
-                game.Discard.OnCardRemoved += OnCardDraw;
-            }
         }
 
         int GetCardPixelX(StandardCard card)
@@ -135,39 +81,50 @@ namespace CardGamesMod
             throw new Exception("Not expected");
         }
 
-        void OnCardDraw(object stack, EventArgs e)
+        float GetCardTextureU(StandardCard card)
         {
-            var cardStack = stack as CardStack;
-            if (cardStack == game.Draw)
-            {
-                if (cardStack.GetCardCount() == 0)
-                {
-                    drawPanel.Enabled = false;
-                }
-                else
-                {
-                    drawPanel.Enabled = true;
-                }
-            }
-            else if(cardStack == game.Discard)
-            {
-                if (cardStack.GetCardCount() == 0)
-                {
-                    discardPanel.Enabled = false;
-                }
-                else
-                {
-                    discardPanel.Enabled = true;
-                    UpdateCardTexture(discardPanel, cardStack.GetTopCard());
-                }
-            }
+            return (float)GetCardPixelX(card) / baseCardTexture.width;
         }
 
-        void UpdateCardTexture(Panel panel, StandardCard card)
+        float GetCardTextureV(StandardCard card)
         {
-            panel.BackgroundTexture = ImageReader.GetSubTexture(baseCardTexture,
-                new Rect { position = new Vector2 { x = GetCardPixelX(card), y = GetCardPixelY(card) }, size = new Vector2 { x = cardPixelWidth, y = cardPixelHeight } }
-                );
+            return 1 - ((float)(GetCardPixelY(card) + cardPixelHeight) / baseCardTexture.height);
+        }
+
+        public override void Draw()
+        {
+            base.Draw();
+
+            const int cardDistance = 70;
+            if (game.Draw.GetCardCount() > 0)
+            {
+                int positionX = (int)NativePanel.Size.x / 2 - cardDistance / 2 - cardPixelWidth / 2;
+                int positionY = (int)NativePanel.Size.y / 2 - cardPixelHeight / 2;
+
+                GUI.DrawTextureWithTexCoords(
+                    new Rect(positionX * NativePanel.LocalScale.x, positionY * NativePanel.LocalScale.y
+                    , cardPixelWidth * NativePanel.LocalScale.x, cardPixelHeight * NativePanel.LocalScale.y)
+                    , baseCardTexture
+                    , new Rect(0, 0.75f, cardTextureU, cardTextureV)
+                    );
+            }
+
+            if(game.Discard.GetCardCount() > 0)
+            {
+                int positionX = (int)NativePanel.Size.x / 2 + cardDistance / 2 - cardPixelWidth / 2;
+                int positionY = (int)NativePanel.Size.y / 2 - cardPixelHeight / 2;
+
+                var topCard = game.Discard.GetTopCard();
+                var currentCardU = GetCardTextureU(topCard);
+                var currentCardV = GetCardTextureV(topCard);
+
+                GUI.DrawTextureWithTexCoords(
+                    new Rect(positionX * NativePanel.LocalScale.x, positionY * NativePanel.LocalScale.y,
+                    cardPixelWidth * NativePanel.LocalScale.x, cardPixelHeight * NativePanel.LocalScale.y)
+                    , baseCardTexture
+                    , new Rect(currentCardU, currentCardV, cardTextureU, cardTextureV)
+                    );
+            }
         }
     }
 }
