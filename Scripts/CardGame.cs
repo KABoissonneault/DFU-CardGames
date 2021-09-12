@@ -9,7 +9,7 @@ namespace CardGamesMod
 {
     class CardEventArgs : EventArgs
     {
-        public StandardCard Card;
+        public IEnumerable<StandardCard> Cards;
     }
 
     class CardStack
@@ -19,23 +19,39 @@ namespace CardGamesMod
         public EventHandler OnCardAdded;
         public EventHandler OnCardRemoved;
 
-        public CardStack(IEnumerable<StandardCard> InitialCards)
+        public CardStack()
         {
-            stack.AddRange(InitialCards);
         }
 
         public void AddCard(in StandardCard card)
         {
             stack.Add(card);
-            OnCardAdded?.Invoke(this, new CardEventArgs { Card = card });
+            OnCardAdded?.Invoke(this, new CardEventArgs { Cards = new StandardCard[1] { card } });
+        }
+
+        public void AddCards(IEnumerable<StandardCard> cards)
+        {
+            stack.AddRange(cards);
+            OnCardAdded?.Invoke(this, new CardEventArgs { Cards = cards });
         }
 
         public StandardCard DrawCard()
         {
             StandardCard card = GetTopCard();
             stack.RemoveAt(stack.Count - 1);
-            OnCardRemoved?.Invoke(this, new CardEventArgs { Card = card });
+            OnCardRemoved?.Invoke(this, new CardEventArgs { Cards = new StandardCard[1] { card } });
             return card;
+        }
+
+        public IEnumerable<StandardCard> DrawCards(int count)
+        {
+            if (stack.Count < count)
+                throw new Exception("Overdrew stack");
+
+            List<StandardCard> result = new List<StandardCard>(stack.Skip(stack.Count - count));
+            stack.RemoveRange(stack.Count - count, count);
+            OnCardRemoved?.Invoke(this, new CardEventArgs { Cards = result });
+            return result;
         }
 
         public StandardCard GetTopCard()
@@ -49,17 +65,52 @@ namespace CardGamesMod
         }
     }
 
+    class CardHand
+    {
+        List<StandardCard> hand = new List<StandardCard>();
+
+        public EventHandler OnCardAdded;
+        public EventHandler OnCardRemoved;
+
+        public void AddCard(StandardCard card)
+        {
+            hand.Add(card);
+            OnCardAdded?.Invoke(this, new CardEventArgs { Cards = new StandardCard[1] { card } });
+        }
+
+        public void AddCards(IEnumerable<StandardCard> cards)
+        {
+            hand.AddRange(cards);
+            OnCardAdded?.Invoke(this, new CardEventArgs { Cards = cards });
+        }
+
+        public IEnumerable<StandardCard> GetCards()
+        {
+            return hand;
+        }
+    }
+
     class CardGame : MonoBehaviour
     {
-        CardStack draw = new CardStack(GetStandardDeck().Concat(GetStandardDeck()));
-        CardStack discard = new CardStack(Enumerable.Empty<StandardCard>());
+        CardStack draw = new CardStack();
+        CardStack discard = new CardStack();
+
+        CardHand northHand = new CardHand();
+        CardHand westHand = new CardHand();
+        CardHand southHand = new CardHand();
+        CardHand eastHand = new CardHand();
 
         public CardStack Draw { get { return draw; } }
         public CardStack Discard { get { return discard; } }
+        public CardHand NorthHand { get { return northHand; } }
+        public CardHand WestHand { get { return westHand; } }
+        public CardHand SouthHand { get { return southHand; } }
+        public CardHand EastHand { get { return eastHand; } }
 
         public void Start()
         {
-
+            System.Random rng = new System.Random();
+            draw.AddCards(GetStandardDeck().Concat(GetStandardDeck()).OrderBy(_ => rng.Next()));
         }
 
         public void Update()

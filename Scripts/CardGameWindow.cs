@@ -13,7 +13,6 @@ namespace CardGamesMod
         const int cardPixelWidth = 35;
         const int cardPixelHeight = 47;
 
-
         CardGame game;
 
         Panel drawPanel;
@@ -48,11 +47,9 @@ namespace CardGamesMod
                     NativePanel
                     );
 
-                if (game.Draw.GetCardCount() > 0)
-                {
-                    drawPanel.BackgroundTexture = ImageReader.GetSubTexture(baseCardTexture, new Rect { position = new Vector2 { x = 0, y = 0 }, size = new Vector2 { x = cardPixelWidth, y = cardPixelHeight } });
-                }
-                else
+                drawPanel.BackgroundTexture = ImageReader.GetSubTexture(baseCardTexture, new Rect { position = new Vector2 { x = 0, y = 0 }, size = new Vector2 { x = cardPixelWidth, y = cardPixelHeight } });
+
+                if(game.Draw.GetCardCount() == 0)
                 {
                     drawPanel.Enabled = false;
                 }
