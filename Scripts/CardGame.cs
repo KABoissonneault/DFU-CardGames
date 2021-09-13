@@ -54,6 +54,11 @@ namespace CardGamesMod
             return result;
         }
 
+        public StandardCard GetCard(int i)
+        {
+            return stack[i];
+        }
+
         public StandardCard GetTopCard()
         {
             return stack[stack.Count - 1];

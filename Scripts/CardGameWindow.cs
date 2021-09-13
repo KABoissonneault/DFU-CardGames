@@ -8,10 +8,12 @@ namespace CardGamesMod
 {
     class CardGameWindow : DaggerfallBaseWindow
     {
-        const int cardPixelWidth = 35;
-        const int cardPixelHeight = 47;
-        const float cardTextureU = 0.0655430712f;
-        const float cardTextureV = 0.25f;
+        const int CardPixelWidth = 35;
+        const int CardPixelHeight = 47;
+        const float CardTextureU = 0.0655430712f;
+        const float CardTextureV = 0.25f;
+
+        const float CardStackScale = 0.5f;
 
         CardGame game;
 
@@ -35,7 +37,7 @@ namespace CardGamesMod
             if (card.Rank >= CardRank.Two && card.Rank <= CardRank.King)
             {
                 int diff = (int)card.Rank - (int)CardRank.Two;
-                return cardPixelWidth + cardPixelWidth * diff;
+                return CardPixelWidth + CardPixelWidth * diff;
             }
             else if (card.Rank == CardRank.Ace)
             {
@@ -88,43 +90,119 @@ namespace CardGamesMod
 
         float GetCardTextureV(StandardCard card)
         {
-            return 1 - ((float)(GetCardPixelY(card) + cardPixelHeight) / baseCardTexture.height);
+            return 1 - ((float)(GetCardPixelY(card) + CardPixelHeight) / baseCardTexture.height);
+        }
+
+        static readonly Rect FacedownUVRect = new Rect(0, 0.75f, CardTextureU, CardTextureV);
+
+        Rect GetCardUVRect(StandardCard card)
+        {
+            var currentCardU = GetCardTextureU(card);
+            var currentCardV = GetCardTextureV(card);
+
+            return new Rect(currentCardU, currentCardV, CardTextureU, CardTextureV);
+        }
+
+        public void DrawCardAt(Vector2 position, Rect UVRect, float scale = 1.0f)
+        {
+            GUI.DrawTextureWithTexCoords(
+                       new Rect(position.x * NativePanel.LocalScale.x, position.y * NativePanel.LocalScale.y
+                       , CardPixelWidth * NativePanel.LocalScale.x * scale, CardPixelHeight * NativePanel.LocalScale.y * scale)
+                       , baseCardTexture
+                       , UVRect
+                       );
+        }
+
+        public void DrawFacedownStackAt(CardStack stack, Vector2 basePosition, float cardDistance = 0.0f)
+        {
+            if (stack.GetCardCount() == 0)
+                return;
+
+            if(cardDistance == 0.0f)
+            {
+                DrawCardAt(basePosition, FacedownUVRect, CardStackScale);
+            }
+            else
+            {
+                float distanceBuffer = 0.0f;
+                float lastDistance = 0.0f;
+
+                DrawCardAt(basePosition, FacedownUVRect, CardStackScale);
+
+                for(int i = 1; i < stack.GetCardCount(); ++i)
+                {
+                    distanceBuffer += cardDistance * CardStackScale;
+
+                    float flooredBuffer = Mathf.Floor(distanceBuffer);
+                    if (flooredBuffer > lastDistance)
+                    {
+                        var currentPosition = basePosition;
+                        currentPosition.y -= flooredBuffer;
+
+                        DrawCardAt(currentPosition, FacedownUVRect, CardStackScale);
+
+                        lastDistance = flooredBuffer;
+                    }
+                }
+            }
+        }
+
+        public void DrawFaceupStackAt(CardStack stack, Vector2 basePosition, float cardDistance = 0.0f, float maxDistance = 0.0f)
+        {
+            if (stack.GetCardCount() == 0)
+                return;
+
+            if (cardDistance == 0.0f)
+            {
+                DrawCardAt(basePosition, GetCardUVRect(stack.GetTopCard()), CardStackScale);
+            }
+            else
+            {
+                float distanceBuffer = 0.0f;
+                float verticalOffset = 0.0f;
+
+                for (int i = 0; i < stack.GetCardCount(); ++i)
+                {
+                    float flooredBuffer = Mathf.Floor(distanceBuffer);
+                    var currentPosition = basePosition;
+                    currentPosition.x += flooredBuffer;
+                    currentPosition.y += verticalOffset;
+
+                    DrawCardAt(currentPosition, GetCardUVRect(stack.GetCard(i)), CardStackScale);
+
+                    distanceBuffer += cardDistance * CardStackScale;
+
+                    if(maxDistance != 0.0f && distanceBuffer >= maxDistance)
+                    {
+                        distanceBuffer = 0.0f;
+                        verticalOffset += CardPixelHeight * 0.8f * CardStackScale;
+                    }
+                }
+            }
         }
 
         public override void Draw()
         {
             base.Draw();
 
-            const int cardDistance = 70;
-            if (game.Draw.GetCardCount() > 0)
-            {
-                int positionX = (int)NativePanel.Size.x / 2 - cardDistance / 2 - cardPixelWidth / 2;
-                int positionY = (int)NativePanel.Size.y / 2 - cardPixelHeight / 2;
+            const int cardDistance = 32;
 
-                GUI.DrawTextureWithTexCoords(
-                    new Rect(positionX * NativePanel.LocalScale.x, positionY * NativePanel.LocalScale.y
-                    , cardPixelWidth * NativePanel.LocalScale.x, cardPixelHeight * NativePanel.LocalScale.y)
-                    , baseCardTexture
-                    , new Rect(0, 0.75f, cardTextureU, cardTextureV)
-                    );
-            }
+            DrawFacedownStackAt(game.Draw,
+                new Vector2(
+                    (int)NativePanel.Size.x / 2
+                    , (int)NativePanel.Size.y / 2 - cardDistance / 2 - CardPixelHeight / 2
+                ),
+                0.1f
+            );
 
-            if(game.Discard.GetCardCount() > 0)
-            {
-                int positionX = (int)NativePanel.Size.x / 2 + cardDistance / 2 - cardPixelWidth / 2;
-                int positionY = (int)NativePanel.Size.y / 2 - cardPixelHeight / 2;
-
-                var topCard = game.Discard.GetTopCard();
-                var currentCardU = GetCardTextureU(topCard);
-                var currentCardV = GetCardTextureV(topCard);
-
-                GUI.DrawTextureWithTexCoords(
-                    new Rect(positionX * NativePanel.LocalScale.x, positionY * NativePanel.LocalScale.y,
-                    cardPixelWidth * NativePanel.LocalScale.x, cardPixelHeight * NativePanel.LocalScale.y)
-                    , baseCardTexture
-                    , new Rect(currentCardU, currentCardV, cardTextureU, cardTextureV)
-                    );
-            }
+            DrawFaceupStackAt(game.Discard,
+                new Vector2(
+                    3 * (int)NativePanel.Size.x / 8
+                    , (int)NativePanel.Size.y / 2 + cardDistance / 2 - CardPixelHeight / 2
+                ),
+                12.0f,
+                NativePanel.Size.x / 4
+            );
         }
     }
 }
