@@ -19,10 +19,6 @@ namespace CardGamesMod
         public EventHandler OnCardAdded;
         public EventHandler OnCardRemoved;
 
-        public CardStack()
-        {
-        }
-
         public void AddCard(in StandardCard card)
         {
             stack.Add(card);
@@ -89,9 +85,21 @@ namespace CardGamesMod
             OnCardAdded?.Invoke(this, new CardEventArgs { Cards = cards });
         }
 
-        public IEnumerable<StandardCard> GetCards()
+        public StandardCard GetCard(int i)
         {
-            return hand;
+            return hand[i];
+        }
+
+        public int GetCardCount()
+        {
+            return hand.Count;
+        }
+
+        public StandardCard RemoveCard(int i)
+        {
+            StandardCard card = hand[i];
+            hand.RemoveAt(i);
+            return card;
         }
     }
 
@@ -120,17 +128,7 @@ namespace CardGamesMod
 
         public void Update()
         {
-            if(Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                if(draw.GetCardCount() > 0)
-                    discard.AddCard(draw.DrawCard());
-
-            }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                if (discard.GetCardCount() > 0)
-                    draw.AddCard(discard.DrawCard());
-            }
+            
         }
     }
 }

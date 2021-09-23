@@ -181,6 +181,41 @@ namespace CardGamesMod
             }
         }
 
+        public void DrawFaceupHand(CardHand hand, Vector2 basePosition, float cardDistance)
+        {
+            const float HandScale = 0.8f;
+
+            if (hand.GetCardCount() == 0)
+                return;
+
+            if(hand.GetCardCount() % 2 == 0)
+            {
+                float x_base_offset = (hand.GetCardCount() / 2) * cardDistance * HandScale;
+
+                for(int i = 0; i < hand.GetCardCount(); ++i)
+                {
+                    var currentPosition = basePosition;
+                    currentPosition.x -= x_base_offset;
+                    currentPosition.x += i * cardDistance * HandScale;
+
+                    DrawCardAt(currentPosition, GetCardUVRect(hand.GetCard(i)), HandScale);
+                }
+            }
+            else
+            {
+                float x_base_offset = (hand.GetCardCount() / 2 + 0.5f) * cardDistance * HandScale;
+
+                for (int i = 0; i < hand.GetCardCount(); ++i)
+                {
+                    var currentPosition = basePosition;
+                    currentPosition.x -= x_base_offset;
+                    currentPosition.x += i * cardDistance * HandScale;
+
+                    DrawCardAt(currentPosition, GetCardUVRect(hand.GetCard(i)), HandScale);
+                }
+            }
+        }
+
         public override void Draw()
         {
             base.Draw();
@@ -202,6 +237,14 @@ namespace CardGamesMod
                 ),
                 12.0f,
                 NativePanel.Size.x / 4
+            );
+
+            DrawFaceupHand(game.SouthHand,
+                new Vector2(
+                    NativePanel.Size.x / 2
+                    , NativePanel.Size.y - (NativePanel.Size.y /16.0f) - CardPixelHeight
+                ),
+                12.0f
             );
         }
     }

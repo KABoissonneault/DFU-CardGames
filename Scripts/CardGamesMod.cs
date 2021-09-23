@@ -77,8 +77,9 @@ namespace CardGamesMod
     {
         private static Mod mod;
         private static CardGamesMod instance;
+        static GameObject modObject;
 
-        GameObject cardGame;
+        CardGame cardGame;
         CardGameWindow gameWindow;
 
         public static Mod Mod { get { return mod; } }
@@ -88,8 +89,11 @@ namespace CardGamesMod
         {
             mod = initParams.Mod;
 
-            var go = new GameObject(mod.Title);
-            instance = go.AddComponent<CardGamesMod>();
+            modObject = new GameObject(mod.Title);
+            instance = modObject.AddComponent<CardGamesMod>();
+            instance.cardGame = modObject.AddComponent<CardGame>();
+            instance.cardGame.enabled = false;
+            modObject.AddComponent<CardGameController>();
 
             // Tables
             PlayerActivate.RegisterCustomActivation(mod, 41108, OnTableActivated);
@@ -111,18 +115,23 @@ namespace CardGamesMod
 
         static void OnTableActivated(RaycastHit hit)
         {
-            if (instance.cardGame != null)
+            if (instance.cardGame.enabled)
                 return;
 
             var PlayerEnterExit = GameManager.Instance.PlayerEnterExit;
             if (PlayerEnterExit.IsPlayerInsideBuilding && PlayerEnterExit­.BuildingType == DFLocation.BuildingTypes.Tavern)
             {
-                instance.cardGame = new GameObject("CardGame");
-                var cardGame = instance.cardGame.AddComponent<CardGame>();
-
-                instance.gameWindow = new CardGameWindow(DaggerfallUI.UIManager, cardGame);
+                instance.cardGame.enabled = true;
+                
+                instance.gameWindow = new CardGameWindow(DaggerfallUI.UIManager, instance.cardGame);
+                instance.gameWindow.OnClose += GameWindow_OnClose;
                 DaggerfallUI.UIManager.PushWindow(instance.gameWindow);
             }
+        }
+
+        private static void GameWindow_OnClose()
+        {
+            instance.cardGame.enabled = false;
         }
     }
 }
