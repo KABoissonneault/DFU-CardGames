@@ -5,8 +5,8 @@ namespace CardGamesMod
     [RequireComponent(typeof(CardGame))]
     class CardGameController : MonoBehaviour
     {
-        const float KeyRepeatDelay = 1.0f;
-        const float KeyRepeatPeriod = 0.25f;
+        const float KeyRepeatDelay = 0.5f;
+        const float KeyRepeatPeriod = 0.15f;
 
         CardGame game;
 

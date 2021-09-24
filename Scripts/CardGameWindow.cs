@@ -14,6 +14,7 @@ namespace CardGamesMod
         const float CardTextureV = 0.25f;
 
         const float CardStackScale = 0.5f;
+        const float CardHandScale = 0.5f;
 
         CardGame game;
 
@@ -113,25 +114,25 @@ namespace CardGamesMod
                        );
         }
 
-        public void DrawFacedownStackAt(CardStack stack, Vector2 basePosition, float cardDistance = 0.0f)
+        public void DrawFacedownCardStackAt(int count, Vector2 basePosition, float cardDistance, float cardScale)
         {
-            if (stack.GetCardCount() == 0)
+            if (count == 0)
                 return;
 
             if(cardDistance == 0.0f)
             {
-                DrawCardAt(basePosition, FacedownUVRect, CardStackScale);
+                DrawCardAt(basePosition, FacedownUVRect, cardScale);
             }
             else
             {
                 float distanceBuffer = 0.0f;
                 float lastDistance = 0.0f;
 
-                DrawCardAt(basePosition, FacedownUVRect, CardStackScale);
+                DrawCardAt(basePosition, FacedownUVRect, cardScale);
 
-                for(int i = 1; i < stack.GetCardCount(); ++i)
+                for(int i = 1; i < count; ++i)
                 {
-                    distanceBuffer += cardDistance * CardStackScale;
+                    distanceBuffer += cardDistance * cardScale;
 
                     float flooredBuffer = Mathf.Floor(distanceBuffer);
                     if (flooredBuffer > lastDistance)
@@ -139,10 +140,43 @@ namespace CardGamesMod
                         var currentPosition = basePosition;
                         currentPosition.y -= flooredBuffer;
 
-                        DrawCardAt(currentPosition, FacedownUVRect, CardStackScale);
+                        DrawCardAt(currentPosition, FacedownUVRect, cardScale);
 
                         lastDistance = flooredBuffer;
                     }
+                }
+            }
+        }
+
+        public void DrawFacedownCardHandAt(int count, Vector2 basePosition, float cardDistance, float cardScale)
+        {
+            if (count == 0)
+                return;
+
+            if (count % 2 == 0)
+            {
+                float x_base_offset = (count / 2) * cardDistance * cardScale;
+
+                for (int i = 0; i < count; ++i)
+                {
+                    var currentPosition = basePosition;
+                    currentPosition.x -= x_base_offset;
+                    currentPosition.x += i * cardDistance * cardScale;
+
+                    DrawCardAt(currentPosition, FacedownUVRect, cardScale);
+                }
+            }
+            else
+            {
+                float x_base_offset = (count / 2.0f) * cardDistance * cardScale;
+
+                for (int i = 0; i < count; ++i)
+                {
+                    var currentPosition = basePosition;
+                    currentPosition.x -= x_base_offset;
+                    currentPosition.x += i * cardDistance * cardScale;
+
+                    DrawCardAt(currentPosition, FacedownUVRect, cardScale);
                 }
             }
         }
@@ -181,7 +215,7 @@ namespace CardGamesMod
             }
         }
 
-        public void DrawFaceupHand(CardHand hand, Vector2 basePosition, float cardDistance)
+        public void DrawFaceupHandAt(CardHand hand, Vector2 basePosition, float cardDistance)
         {
             const float HandScale = 0.8f;
 
@@ -222,30 +256,42 @@ namespace CardGamesMod
 
             const int cardDistance = 32;
 
-            DrawFacedownStackAt(game.Draw,
+            DrawFacedownCardStackAt(game.Draw.GetCardCount(),
                 new Vector2(
-                    (int)NativePanel.Size.x / 2
-                    , (int)NativePanel.Size.y / 2 - cardDistance / 2 - CardPixelHeight / 2
+                    NativePanel.Size.x / 2
+                    , NativePanel.Size.y / 2 - cardDistance / 2 - CardPixelHeight / 2
                 ),
-                0.1f
+                0.1f,
+                CardStackScale
             );
+
+            float DiscardLength = NativePanel.Size.x / 4 + (NativePanel.Size.x / 4) * Mathf.Min(game.Discard.GetCardCount() / 25.0f, 1.0f);
 
             DrawFaceupStackAt(game.Discard,
                 new Vector2(
-                    3 * (int)NativePanel.Size.x / 8
+                    (NativePanel.Size.x - DiscardLength) / 2
                     , (int)NativePanel.Size.y / 2 + cardDistance / 2 - CardPixelHeight / 2
                 ),
                 12.0f,
-                NativePanel.Size.x / 4
+                DiscardLength
             );
 
-            DrawFaceupHand(game.SouthHand,
+            DrawFaceupHandAt(game.SouthHand,
                 new Vector2(
                     NativePanel.Size.x / 2
                     , NativePanel.Size.y - (NativePanel.Size.y /16.0f) - CardPixelHeight
                 ),
                 12.0f
             );
+
+            DrawFacedownCardHandAt(game.NorthHand.GetCardCount(),
+                new Vector2(
+                    NativePanel.Size.x / 2
+                    , NativePanel.Size.y / 16.0f
+                ),
+                12.0f,
+                CardHandScale
+                );
         }
     }
 }

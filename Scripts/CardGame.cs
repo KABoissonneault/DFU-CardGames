@@ -113,22 +113,60 @@ namespace CardGamesMod
         CardHand southHand = new CardHand();
         CardHand eastHand = new CardHand();
 
+        int dealer;
+
         public CardStack Draw { get { return draw; } }
         public CardStack Discard { get { return discard; } }
         public CardHand NorthHand { get { return northHand; } }
-        public CardHand WestHand { get { return westHand; } }
-        public CardHand SouthHand { get { return southHand; } }
         public CardHand EastHand { get { return eastHand; } }
+        public CardHand SouthHand { get { return southHand; } }
+        public CardHand WestHand { get { return westHand; } }
 
         public void Start()
         {
             System.Random rng = new System.Random();
             draw.AddCards(GetStandardDeck().Concat(GetStandardDeck()).OrderBy(_ => rng.Next()));
+
+            dealer = rng.Next(0, 3);
+
+            for(int i = 0; i < 13; ++i)
+            {
+                foreach(var hand in GetDealOrder())
+                {
+                    hand.AddCard(draw.DrawCard());
+                }
+            }            
         }
 
-        public void Update()
+        IEnumerable<CardHand> GetDealOrder()
         {
-            
+            switch(dealer)
+            {
+                case 0:
+                    yield return eastHand;
+                    yield return southHand;
+                    yield return westHand;
+                    yield return northHand;
+                    yield break;
+                case 1:
+                    yield return southHand;
+                    yield return westHand;
+                    yield return northHand;
+                    yield return eastHand;
+                    yield break;
+                case 2:
+                    yield return westHand;
+                    yield return northHand;
+                    yield return eastHand;
+                    yield return southHand;
+                    yield break;
+                case 3:
+                    yield return northHand;
+                    yield return eastHand;
+                    yield return southHand;
+                    yield return westHand;
+                    yield break;
+            }
         }
     }
 }
