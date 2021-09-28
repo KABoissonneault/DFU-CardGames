@@ -292,6 +292,25 @@ namespace CardGamesMod
                 12.0f,
                 CardHandScale
                 );
+
+            GUIUtility.RotateAroundPivot(90.0f, new Vector2(Screen.width / 2.0f, Screen.height / 2.0f));
+            DrawFacedownCardHandAt(game.WestHand.GetCardCount(),
+                new Vector2(
+                    NativePanel.Size.x / 2.0f
+                    , NativePanel.Size.y - NativePanel.Size.y / 16.0f
+                ),
+                12.0f,
+                CardHandScale
+                );
+
+            DrawFacedownCardHandAt(game.EastHand.GetCardCount(),
+                    new Vector2(
+                        NativePanel.Size.x / 2.0f
+                        , NativePanel.Size.y / 16.0f
+                    ),
+                    12.0f,
+                    CardHandScale
+                    );
         }
     }
 }
